@@ -1,0 +1,151 @@
+{
+  lib,
+  dbus,
+  eudev,
+  fetchFromGitHub,
+  installShellFiles,
+  libdisplay-info_0_3,
+  libglvnd,
+  libinput,
+  libxkbcommon,
+  libgbm,
+  versionCheckHook,
+  nix-update-script,
+  pango,
+  pipewire,
+  pkg-config,
+  rustPlatform,
+  seatd,
+  stdenv,
+  systemdLibs,
+  wayland,
+  withDbus ? true,
+  withDinit ? false,
+  withScreencastSupport ? true,
+  withSystemd ? true,
+}:
+
+let
+  # REMOVE after https://github.com/urayde/niri/pull/2 is resolved.
+  fixCargoLock = ''
+    sed -Ei 's|\?rev=([0-9a-f]{40})"|?rev=\1#\1"|' Cargo.lock
+  '';
+in
+rustPlatform.buildRustPackage (finalAttrs: {
+  pname = "niri-urayde";
+  version = "26.04";
+
+  src = fetchFromGitHub {
+    owner = "urayde";
+    repo = "niri";
+    rev = "93e775681296c4f26e96e36edf6665e747b57a71";
+    hash = "sha256-qakwXl7XJAbPGa7psO6Pg/hThAgduj+nQQHPu2Qbzo0=";
+  };
+
+  outputs = [
+    "out"
+    "doc"
+  ];
+
+  postPatch = fixCargoLock + ''
+    patchShebangs resources/niri-session
+    substituteInPlace resources/niri.service \
+      --replace-fail 'niri' "$out/bin/niri"
+  '';
+
+  cargoHash = "sha256-gfnalA3qI3a9h3PvsxgQLCrzapfjLLkxhTMJpwRh+ro=";
+  depsExtraArgs.postPatch = fixCargoLock;
+
+  nativeBuildInputs = [
+    installShellFiles
+    pkg-config
+    rustPlatform.bindgenHook
+  ];
+
+  buildInputs = [
+    libdisplay-info_0_3
+    libglvnd # For libEGL
+    libinput
+    libxkbcommon
+    libgbm
+    pango
+    seatd
+    wayland # For libwayland-client
+  ]
+  ++ lib.optional (withDbus || withScreencastSupport || withSystemd) dbus
+  ++ lib.optional withScreencastSupport pipewire
+  ++ lib.optional withSystemd systemdLibs # Includes libudev
+  ++ lib.optional (!withSystemd) eudev; # Use an alternative libudev implementation when building w/o systemd
+
+  buildFeatures =
+    lib.optional withDbus "dbus"
+    ++ lib.optional withDinit "dinit"
+    ++ lib.optional withScreencastSupport "xdp-gnome-screencast"
+    ++ lib.optional withSystemd "systemd";
+  buildNoDefaultFeatures = true;
+
+  postInstall = ''
+    install -Dm0644 README.md resources/default-config.kdl -t $doc/share/doc/niri
+    mv docs/wiki $doc/share/doc/niri/wiki
+
+    install -Dm0644 resources/niri.desktop -t $out/share/wayland-sessions
+  ''
+  + lib.optionalString withDbus ''
+    install -Dm0644 resources/niri-portals.conf -t $out/share/xdg-desktop-portal
+  ''
+  + lib.optionalString (withSystemd || withDinit) ''
+    install -Dm0755 resources/niri-session -t $out/bin
+  ''
+  + lib.optionalString withSystemd ''
+    install -Dm0644 resources/niri{-shutdown.target,.service} -t $out/lib/systemd/user
+  ''
+  + lib.optionalString withDinit ''
+    install -Dm0644 resources/dinit/niri{-shutdown,} -t $out/lib/dinit.d/user
+  ''
+  + lib.optionalString (stdenv.buildPlatform.canExecute stdenv.hostPlatform) ''
+    installShellCompletion --cmd niri \
+      --bash <($out/bin/niri completions bash) \
+      --fish <($out/bin/niri completions fish) \
+      --nushell <($out/bin/niri completions nushell) \
+      --zsh <($out/bin/niri completions zsh)
+  '';
+
+  env = {
+    # Force linking with libEGL and libwayland-client
+    # so they can be discovered by `dlopen()`
+    RUSTFLAGS = toString (
+      map (arg: "-C link-arg=" + arg) [
+        "-Wl,--push-state,--no-as-needed"
+        "-lEGL"
+        "-lwayland-client"
+        "-Wl,--pop-state"
+      ]
+    );
+
+    # Upstream recommends setting the commit hash manually when in a
+    # build environment where the Git repository is unavailable.
+    # See https://github.com/niri-wm/niri/wiki/Packaging-niri#version-string
+    NIRI_BUILD_COMMIT = "urayde-${finalAttrs.src.rev}";
+  };
+
+  checkFlags = [ "--skip=::egl" ];
+  nativeInstallCheckInputs = [ versionCheckHook ];
+  doInstallCheck = true;
+
+  passthru = {
+    providedSessions = [ "niri" ];
+    updateScript = nix-update-script { extraArgs = [ "--version=branch" ]; };
+  };
+
+  meta = {
+    description = "Scrollable-tiling Wayland compositor";
+    homepage = "https://github.com/niri-wm/niri";
+    changelog = "https://github.com/niri-wm/niri/releases/tag/v${finalAttrs.version}";
+    license = lib.licenses.gpl3Only;
+    maintainers = [
+      { name = "yukei"; }
+    ];
+    mainProgram = "niri";
+    platforms = lib.platforms.linux;
+  };
+})

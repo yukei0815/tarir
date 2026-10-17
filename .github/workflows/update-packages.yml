@@ -1,0 +1,63 @@
+name: Update packages
+
+on:
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+
+jobs:
+  packages:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      packages: ${{ steps.list.outputs.packages }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: canidae-solutions/lix-quick-install-action@v5
+      - id: list
+        run: echo "packages=$(nix eval .#packages.x86_64-linux --apply builtins.attrNames --json)" >> "$GITHUB_OUTPUT"
+
+  update:
+    needs: packages
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        package: ${{ fromJSON(needs.packages.outputs.packages) }}
+    env:
+      PACKAGE: ${{ matrix.package }}
+      NIXPKGS_ALLOW_UNFREE: 1
+    steps:
+      - uses: actions/checkout@v7
+      - uses: canidae-solutions/lix-quick-install-action@v5
+
+      - name: Point <nixpkgs> at the flake input
+        run: echo "NIX_CONFIG=nix-path = nixpkgs=$(nix eval --raw --inputs-from . nixpkgs#path)" >> "$GITHUB_ENV"
+
+      - name: Run nix-update
+        id: update
+        run: |
+          nix shell --inputs-from . nixpkgs#lixPackageSets.lix_2_95.nix-update -c \
+            nix-update --flake --use-update-script "$PACKAGE" --write-commit-message "$RUNNER_TEMP/commit-message"
+
+          if [[ -s "$RUNNER_TEMP/commit-message" ]]; then
+            echo "title=$(head -n 1 "$RUNNER_TEMP/commit-message")" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/create-github-app-token@v3
+        id: app-token
+        with:
+          client-id: ${{ vars.APP_CLIENT_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      - uses: peter-evans/create-pull-request@v8
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          branch: update/${{ matrix.package }}
+          add-paths: pkgs
+          commit-message: "${{ steps.update.outputs.title || format('{0}: update', matrix.package) }}"
+          title: "${{ steps.update.outputs.title || format('{0}: update', matrix.package) }}"
+          delete-branch: true

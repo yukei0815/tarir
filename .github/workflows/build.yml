@@ -1,0 +1,35 @@
+name: Build
+
+on: pull_request
+
+jobs:
+  build:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: samueldr/lix-gha-installer-action@v2026-06-15
+      - uses: Mic92/niks3-action@v1
+        with:
+          server-url: https://niks3.yukei.moe
+      - run: |
+          drvs=$(nix-instantiate grouped.nix -A buildAndCache)
+          plan=$(nix-store --realise --dry-run $drvs 2>&1)
+          todo=$(grep -Fx -f <(sed 's/^ *//' <<< "$plan") <<< "$drvs" || true)
+          if [[ -n $todo ]]; then nix-store --realise $todo; fi
+
+  build-only:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+      - uses: samueldr/lix-gha-installer-action@v2026-06-15
+      - uses: Mic92/niks3-action@v1
+        with:
+          server-url: https://niks3.yukei.moe
+      - run: nix-build grouped.nix -A buildOnly --no-out-link
