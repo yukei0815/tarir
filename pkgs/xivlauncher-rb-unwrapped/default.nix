@@ -1,0 +1,121 @@
+{
+  lib,
+  buildDotnetModule,
+  fetchFromGitHub,
+  dotnetCorePackages,
+  sdl3,
+  libdecor,
+  libsecret,
+  glib,
+  gnutls,
+  aria2,
+  gst_all_1,
+  copyDesktopItems,
+  makeDesktopItem,
+  makeWrapper,
+  nix-update-script,
+}:
+buildDotnetModule (finalAttrs: {
+  pname = "XIVLauncher-rb";
+  version = "1.4.0.12";
+
+  src = fetchFromGitHub {
+    owner = "rankynbass";
+    repo = "XIVLauncher.Core";
+    tag = "rb-v${finalAttrs.version}";
+    hash = "sha256-nDcgHXjuIst8v8QD1oCl+Z5Fvi5M+WFv9RDd/kBSo6s=";
+    fetchSubmodules = true;
+  };
+
+  nativeBuildInputs = [
+    copyDesktopItems
+    makeWrapper
+  ];
+
+  buildInputs = with gst_all_1; [
+    gstreamer
+    gst-plugins-base
+    gst-plugins-good
+    gst-plugins-bad
+    gst-plugins-ugly
+    gst-libav
+  ];
+
+  projectFile = "src/XIVLauncher.Core/XIVLauncher.Core.csproj";
+  nugetDeps = ./deps.json; # File generated with `nix-build -A xivlauncher-rb-unwrapped.fetch-deps`
+
+  # please do not unpin these even if they match the defaults, xivlauncher is sensitive to .NET versions
+  dotnet-sdk =
+    with dotnetCorePackages;
+    sdk_10_0
+    // {
+      inherit (sdk_9_0)
+        packages
+        targetPackages
+        ;
+    };
+
+  dotnetFlags = [
+    "-p:BuildHash=${finalAttrs.version}"
+    "-p:PublishSingleFile=false"
+  ];
+
+  postPatch = ''
+    substituteInPlace lib/FFXIVQuickLauncher/src/XIVLauncher.Common/Game/Patch/Acquisition/Aria/AriaPatchAcquisition.cs \
+      --replace-fail 'ariaPath = "aria2c"' 'ariaPath = "${aria2}/bin/aria2c"'
+  '';
+
+  postInstall = ''
+    mkdir -p $out/share/pixmaps
+    cp src/XIVLauncher.Core/Resources/logo.png $out/share/pixmaps/xivlauncher.png
+  '';
+
+  postFixup = ''
+    wrapProgram $out/bin/XIVLauncher.Core --prefix GST_PLUGIN_SYSTEM_PATH_1_0 ":" "$GST_PLUGIN_SYSTEM_PATH_1_0"
+    # the reference to aria2 gets mangled as UTF-16LE and isn't detectable by nix: https://github.com/NixOS/nixpkgs/issues/220065
+    mkdir -p $out/nix-support
+    echo ${aria2} >> $out/nix-support/depends
+  '';
+
+  executables = [ "XIVLauncher.Core" ];
+
+  runtimeDeps = [
+    sdl3
+    libdecor
+    libsecret
+    glib
+    gnutls
+  ];
+
+  passthru.updateScript = nix-update-script {
+    extraArgs = [
+      "--version-regex"
+      "rb-v(.*)"
+    ];
+  };
+
+  desktopItems = [
+    (makeDesktopItem {
+      name = "xivlauncher";
+      exec = "XIVLauncher.Core";
+      icon = "xivlauncher";
+      desktopName = "XIVLauncher";
+      comment = finalAttrs.meta.description;
+      categories = [ "Game" ];
+      startupWMClass = "XIVLauncher.Core";
+    })
+  ];
+
+  meta = {
+    description = "Custom launcher for FFXIV";
+    homepage = "https://github.com/goatcorp/XIVLauncher.Core";
+    license = lib.licenses.gpl3;
+    maintainers = with lib.maintainers; [
+      blooym
+      keysmashes
+      witchof0x20
+    ];
+    platforms = [ "x86_64-linux" ];
+    mainProgram = "XIVLauncher.Core";
+  };
+})
