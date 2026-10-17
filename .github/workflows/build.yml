@@ -1,0 +1,27 @@
+name: Build
+
+on: pull_request
+
+jobs:
+  build:
+    name: Build and cache
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: canidae-solutions/lix-quick-install-action@v5
+        with:
+          lix_conf: |
+            max-jobs = auto
+      - uses: Mic92/niks3-action@v1
+        with:
+          server-url: https://niks3.yukei.moe
+      - name: Build packages not in cache
+        run: |
+          drvs=$(nix-instantiate default.nix)
+          plan=$(nix-store --realise --dry-run $drvs 2>&1)
+          todo=$(grep -Fx -f <(sed 's/^ *//' <<< "$plan") <<< "$drvs" || true)
+          if [[ -n $todo ]]; then nix-store --realise $todo; fi
