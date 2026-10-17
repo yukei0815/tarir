@@ -33,13 +33,13 @@ let
 in
 rustPlatform.buildRustPackage (finalAttrs: {
   pname = "niri-urayde";
-  version = "26.04";
+  version = "26.04-unstable-2026-10-14";
 
   src = fetchFromGitHub {
     owner = "urayde";
     repo = "niri";
-    rev = "93e775681296c4f26e96e36edf6665e747b57a71";
-    hash = "sha256-qakwXl7XJAbPGa7psO6Pg/hThAgduj+nQQHPu2Qbzo0=";
+    rev = "0ae945d900a210b051ea6fcc5d11d2d555695e53";
+    hash = "sha256-ebgZinxQF3y9uUfkhwP0KEOs289kfe1QGnlUrpzBdrc=";
   };
 
   outputs = [
@@ -53,7 +53,7 @@ rustPlatform.buildRustPackage (finalAttrs: {
       --replace-fail 'niri' "$out/bin/niri"
   '';
 
-  cargoHash = "sha256-gfnalA3qI3a9h3PvsxgQLCrzapfjLLkxhTMJpwRh+ro=";
+  cargoHash = "sha256-te42mM+h+TzWovc5WP7KVmFzykBLAirWaKP2oZii5K0=";
   depsExtraArgs.postPatch = fixCargoLock;
 
   nativeBuildInputs = [
@@ -125,11 +125,12 @@ rustPlatform.buildRustPackage (finalAttrs: {
     # Upstream recommends setting the commit hash manually when in a
     # build environment where the Git repository is unavailable.
     # See https://github.com/niri-wm/niri/wiki/Packaging-niri#version-string
-    NIRI_BUILD_COMMIT = "urayde-${finalAttrs.src.rev}";
+    NIRI_BUILD_COMMIT = "urayde-tarir-${finalAttrs.src.rev}";
   };
 
   checkFlags = [ "--skip=::egl" ];
   nativeInstallCheckInputs = [ versionCheckHook ];
+  preVersionCheck = "version=${lib.head (lib.splitString "-" finalAttrs.version)}";
   doInstallCheck = true;
 
   passthru = {
