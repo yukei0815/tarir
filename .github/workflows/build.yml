@@ -1,0 +1,43 @@
+name: Build
+
+on: pull_request
+
+jobs:
+  build:
+    name: Build and push to cache
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      build-only: ${{ steps.groups.outputs.build-only }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: samueldr/lix-gha-installer-action@v2026-06-15
+      - id: groups
+        run: echo "build-only=$(nix-instantiate --eval -E '(import ./grouped.nix { }).buildOnly != { }')" >> "$GITHUB_OUTPUT"
+      - uses: Mic92/niks3-action@v1
+        with:
+          server-url: https://niks3.yukei.moe
+      - run: |
+          drvs=$(nix-instantiate grouped.nix -A buildAndCache)
+          plan=$(nix-store --realise --dry-run $drvs 2>&1)
+          todo=$(grep -Fx -f <(sed 's/^ *//' <<< "$plan") <<< "$drvs" || true)
+          if [[ -n $todo ]]; then nix-store --realise $todo; fi
+
+  # Separate job without id-token, so niks3 can't push these.
+  build-only:
+    name: Build without caching (unfree or binary)
+    needs: build
+    if: ${{ !cancelled() && needs.build.outputs.build-only == 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+      - uses: samueldr/lix-gha-installer-action@v2026-06-15
+      - uses: Mic92/niks3-action@v1
+        with:
+          server-url: https://niks3.yukei.moe
+      - run: nix-build grouped.nix -A buildOnly --no-out-link
