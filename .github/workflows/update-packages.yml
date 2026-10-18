@@ -67,8 +67,11 @@ jobs:
           token: ${{ steps.app-token.outputs.token }}
           branch: update/${{ matrix.package }}
           add-paths: pkgs
+          author: vissh-rakissh[bot] <342627908+vissh-rakissh[bot]@users.noreply.github.com>
+          committer: vissh-rakissh[bot] <342627908+vissh-rakissh[bot]@users.noreply.github.com>
           commit-message: "${{ steps.update.outputs.title || format('{0}: update', matrix.package) }}"
           title: "${{ steps.update.outputs.title || format('{0}: update', matrix.package) }}"
+          body: ""
           delete-branch: true
 
       - name: Enable auto-merge
