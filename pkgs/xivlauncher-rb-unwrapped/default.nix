@@ -108,13 +108,9 @@ buildDotnetModule (finalAttrs: {
 
   meta = {
     description = "Custom launcher for FFXIV";
-    homepage = "https://github.com/goatcorp/XIVLauncher.Core";
+    homepage = "https://github.com/rankynbass/XIVLauncher.Core";
     license = lib.licenses.gpl3;
-    maintainers = with lib.maintainers; [
-      blooym
-      keysmashes
-      witchof0x20
-    ];
+    maintainers = [ { name = "yukei"; } ];
     platforms = [ "x86_64-linux" ];
     mainProgram = "XIVLauncher.Core";
   };

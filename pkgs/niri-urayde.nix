@@ -140,8 +140,8 @@ rustPlatform.buildRustPackage (finalAttrs: {
 
   meta = {
     description = "Scrollable-tiling Wayland compositor";
-    homepage = "https://github.com/niri-wm/niri";
-    changelog = "https://github.com/niri-wm/niri/releases/tag/v${finalAttrs.version}";
+    homepage = "https://github.com/urayde/niri";
+    changelog = "https://github.com/urayde/niri/releases/tag/v${finalAttrs.version}";
     license = lib.licenses.gpl3Only;
     maintainers = [
       { name = "yukei"; }
