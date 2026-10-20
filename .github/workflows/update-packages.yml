@@ -1,13 +1,20 @@
 name: Update packages
 
 on:
-  schedule:
-    - cron: "17 6 * * *"
+  push:
+    branches: [main]
+    paths: [flake.lock]
+  workflow_run:
+    workflows: [Build]
+    types: [completed]
+    branches: [update/flake-lock]
   workflow_dispatch:
 
 jobs:
   packages:
     name: Collect packages
+    # A successful lock build is handled by the push once it merges
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'failure'
     runs-on: ubuntu-latest
     permissions:
       contents: read
