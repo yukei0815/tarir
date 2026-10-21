@@ -3,9 +3,12 @@
   # as the inner updateScript uses default.nix if --flake is not specified.
   pkgs ?
     let
-      lock = builtins.fromJSON (builtins.readFile ./flake.lock);
+      lock = (builtins.fromJSON (builtins.readFile ./flake.lock)).nodes.nixpkgs.locked;
     in
-    import (builtins.fetchTree lock.nodes.nixpkgs.locked) { },
+    import (builtins.fetchTarball {
+      inherit (lock) url;
+      sha256 = lock.narHash;
+    }) { },
   lib ? pkgs.lib,
 }:
 let
