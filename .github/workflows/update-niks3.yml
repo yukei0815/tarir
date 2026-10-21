@@ -34,8 +34,8 @@ jobs:
         with:
           token: ${{ steps.app-token.outputs.token }}
           branch: update/niks3
-          author: vissh-rakissh[bot] <342627908+vissh-rakissh[bot]@users.noreply.github.com>
-          committer: vissh-rakissh[bot] <342627908+vissh-rakissh[bot]@users.noreply.github.com>
+          author: tsubomi-kido[bot] <342627908+tsubomi-kido[bot]@users.noreply.github.com>
+          committer: tsubomi-kido[bot] <342627908+tsubomi-kido[bot]@users.noreply.github.com>
           commit-message: ${{ steps.check.outputs.title }}
           title: ${{ steps.check.outputs.title }}
           body-path: ${{ runner.temp }}/body.md
