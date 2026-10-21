@@ -24,13 +24,6 @@
   withScreencastSupport ? true,
   withSystemd ? true,
 }:
-
-let
-  # REMOVE after https://github.com/urayde/niri/pull/2 is resolved.
-  fixCargoLock = ''
-    sed -Ei 's|\?rev=([0-9a-f]{40})"|?rev=\1#\1"|' Cargo.lock
-  '';
-in
 rustPlatform.buildRustPackage (finalAttrs: {
   pname = "niri-urayde";
   version = "26.04-unstable-2026-10-14";
@@ -47,14 +40,13 @@ rustPlatform.buildRustPackage (finalAttrs: {
     "doc"
   ];
 
-  postPatch = fixCargoLock + ''
+  postPatch = ''
     patchShebangs resources/niri-session
     substituteInPlace resources/niri.service \
       --replace-fail 'niri' "$out/bin/niri"
   '';
 
   cargoHash = "sha256-te42mM+h+TzWovc5WP7KVmFzykBLAirWaKP2oZii5K0=";
-  depsExtraArgs.postPatch = fixCargoLock;
 
   nativeBuildInputs = [
     installShellFiles
