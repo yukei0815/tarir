@@ -6,7 +6,7 @@ on: pull_request
 jobs:
   build:
     name: Build and cache
-    if: github.event.pull_request.head.repo.full_name == github.repository
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.head_ref != 'update/niks3'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -17,9 +17,18 @@ jobs:
         with:
           lix_conf: |
             max-jobs = auto
+      - name: Download niks3
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/niks3"
+          curl -fsSLo "$RUNNER_TEMP/niks3.tar.gz" "https://github.com/yukei0815/niks3/releases/download/$(<.github/niks3-version)/niks3_Linux_x86_64.tar.gz"
+          gh attestation verify "$RUNNER_TEMP/niks3.tar.gz" -R yukei0815/niks3
+          tar xzf "$RUNNER_TEMP/niks3.tar.gz" -C "$RUNNER_TEMP/niks3"
       - uses: Mic92/niks3-action@v1
         with:
           server-url: https://niks3.yukei.moe
+          niks3-bin: ${{ runner.temp }}/niks3/niks3
       - name: Build packages not in cache
         run: |
           drvs=$(nix-instantiate default.nix)

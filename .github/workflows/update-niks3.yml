@@ -1,0 +1,42 @@
+name: Update niks3
+
+on:
+  schedule:
+    - cron: "37 2 * * *"
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Check latest fork release
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          old=$(<.github/niks3-version)
+          new=$(gh release list -R yukei0815/niks3 --limit 1 --json tagName -q '.[0].tagName')
+          echo "$new" > .github/niks3-version
+          echo "title=niks3: $old -> $new" >> "$GITHUB_OUTPUT"
+          gh release view "${new%%-*}" -R Mic92/niks3 --json body -q .body > "$RUNNER_TEMP/body.md"
+
+      - uses: actions/create-github-app-token@v3
+        id: app-token
+        with:
+          client-id: ${{ vars.APP_CLIENT_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      - uses: peter-evans/create-pull-request@v8
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          branch: update/niks3
+          author: vissh-rakissh[bot] <342627908+vissh-rakissh[bot]@users.noreply.github.com>
+          committer: vissh-rakissh[bot] <342627908+vissh-rakissh[bot]@users.noreply.github.com>
+          commit-message: ${{ steps.check.outputs.title }}
+          title: ${{ steps.check.outputs.title }}
+          body-path: ${{ runner.temp }}/body.md
+          delete-branch: true
