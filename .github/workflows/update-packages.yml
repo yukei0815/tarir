@@ -22,7 +22,7 @@ jobs:
       packages: ${{ steps.list.outputs.packages }}
     steps:
       - uses: actions/checkout@v7
-      - uses: canidae-solutions/lix-quick-install-action@v5
+      - uses: yukei0815/lix-quick-install-action@v6
 
       - name: Collect package to update
         id: list
@@ -43,7 +43,7 @@ jobs:
       NIXPKGS_ALLOW_UNFREE: 1
     steps:
       - uses: actions/checkout@v7
-      - uses: canidae-solutions/lix-quick-install-action@v5
+      - uses: yukei0815/lix-quick-install-action@v6
 
       # nix develop (used for --use-update-script) takes bashInteractive from the nixpkgs registry entry
       - name: Fetch and pin nixpkgs
@@ -55,7 +55,7 @@ jobs:
       - name: Run nix-update
         id: update
         run: |
-          nix shell --inputs-from . nixpkgs#lixPackageSets.lix_2_95.nix-update -c \
+          nix shell --inputs-from . nixpkgs#lixPackageSets.lix_2_96.nix-update -c \
             nix-update --flake --use-update-script "$PACKAGE" --write-commit-message "$RUNNER_TEMP/commit-message"
 
           if [[ -s "$RUNNER_TEMP/commit-message" ]]; then

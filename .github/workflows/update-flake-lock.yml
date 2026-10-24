@@ -13,7 +13,7 @@ jobs:
       actions: write
     steps:
       - uses: actions/checkout@v7
-      - uses: canidae-solutions/lix-quick-install-action@v5
+      - uses: yukei0815/lix-quick-install-action@v6
 
       - name: Update flake.lock
         run: |

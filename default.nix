@@ -16,7 +16,7 @@ lib.fix (
       self
       // {
         nix-update-script = pkgs.nix-update-script.override {
-          nix-update = pkgs.lixPackageSets.lix_2_95.nix-update;
+          nix-update = pkgs.lixPackageSets.lix_2_96.nix-update;
         };
       }
     );
