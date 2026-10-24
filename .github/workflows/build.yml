@@ -4,19 +4,46 @@ run-name: "Build: ${{ github.event.pull_request.title }}"
 on: pull_request
 
 jobs:
-  build:
-    name: Build and cache
+  plan:
+    name: Plan builds
     if: github.event.pull_request.head.repo.full_name == github.repository && github.head_ref != 'update/niks3'
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    outputs:
+      jobs: ${{ steps.plan.outputs.jobs }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: canidae-solutions/lix-quick-install-action@v5
+      - uses: Mic92/niks3-action@v1
+        with:
+          server-url: https://niks3.yukei.moe
+          skip-push: true
+      - name: List jobs with packages not in cache
+        id: plan
+        run: |
+          evals=$(nix shell --inputs-from . nixpkgs#lixPackageSets.lix_2_96.nix-eval-jobs -c \
+            nix-eval-jobs --force-recurse --check-cache-status --expr '(import ./ci.nix).jobs')
+          echo "jobs=$(jq -sc 'map(select(.isCached | not) | .attrPath[0]) | unique' <<< "$evals")" >> "$GITHUB_OUTPUT"
+
+  build:
+    name: Build (${{ matrix.job }})
+    needs: plan
+    if: needs.plan.outputs.jobs != '[]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
       id-token: write
+    strategy:
+      fail-fast: false
+      matrix:
+        job: ${{ fromJSON(needs.plan.outputs.jobs) }}
     steps:
       - uses: actions/checkout@v7
       - uses: canidae-solutions/lix-quick-install-action@v5
         with:
           lix_conf: |
-            max-jobs = auto
+            max-jobs = 1
       - name: Download niks3
         env:
           GH_TOKEN: ${{ github.token }}
@@ -30,8 +57,19 @@ jobs:
           server-url: https://niks3.yukei.moe
           niks3-bin: ${{ runner.temp }}/niks3/niks3
       - name: Build packages not in cache
+        env:
+          JOB: ${{ matrix.job }}
         run: |
-          drvs=$(nix-instantiate default.nix)
-          plan=$(nix-store --realise --dry-run $drvs 2>&1)
-          todo=$(grep -Fx -f <(sed 's/^ *//' <<< "$plan") <<< "$drvs" || true)
-          if [[ -n $todo ]]; then nix-store --realise $todo; fi
+          nix shell --inputs-from . nixpkgs#lixPackageSets.lix_2_96.nix-fast-build -c \
+            nix-fast-build --file ci.nix -A "jobs.$JOB" --skip-cached
+
+  # for branch protection
+  result:
+    name: Build result
+    needs: [plan, build]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check build results
+        if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+        run: exit 1

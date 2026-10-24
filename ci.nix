@@ -1,5 +1,16 @@
 let
   tarirfiles = import ./pkgs.nix;
+  tarirpkgs = import ./default.nix { };
+
+  # Group packages into seperate actions matrix jobs
+  groups = { };
+
+  jobs = groups // {
+    main = builtins.removeAttrs tarirpkgs (
+      builtins.concatMap builtins.attrNames (builtins.attrValues groups)
+    );
+  };
+
   readPkg =
     path:
     builtins.readFile (
@@ -8,9 +19,12 @@ let
 
   # Cursed, but saves a nixpkgs download in CI
   hasUpdateScript = src: builtins.length (builtins.split "updateScript" src) > 1;
-in
-{
+
   packagesToUpdate = builtins.filter (name: hasUpdateScript (readPkg tarirfiles.${name})) (
     builtins.attrNames tarirfiles
   );
+in
+{
+  inherit packagesToUpdate jobs;
+
 }
