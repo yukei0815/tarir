@@ -1,0 +1,19 @@
+{
+  "reshade": {
+    "hash": "6fc9b39821ca6e2d91160f05846b3a42159fec759f5d6fba91d1a57801a1bdaf6047740578c136f0b1a60a9c29ad160d87dbfe0dbfbcdf6ea879a8a078377b8c",
+    "patches": [
+      "0001-from-chars-fallback.patch"
+    ],
+    "repo": "crosire/reshade",
+    "version": "v6.8.0"
+  },
+  "zbic": {
+    "hash": "fbe2f37986377d7f0d96ae3224c80b5971df6e8b6961f68061f1975ebb2e8cb78f07b90f014b007be4023dbf5513581504e7f7d61a5237cb2a8a7a61ae11e482",
+    "repo": "kinnay/zbic",
+    "version": "11b08f2712264bbed731545085cbd9702096ceb7"
+  },
+  "profdata": {
+    "version": "v020525",
+    "hash": "777dd9aefb9427ed08a642b02998f32c5ac120e5d32611d8f21cf1f4e68cee57"
+  }
+}

@@ -3,7 +3,10 @@ let
   tarirpkgs = import ./default.nix { };
 
   # Group packages into seperate actions matrix jobs
-  groups = { };
+  groups = {
+    eden-nightly = { inherit (tarirpkgs) eden-nightly; };
+    eden-nightly-zen4-pgo = { inherit (tarirpkgs) eden-nightly-zen4-pgo; };
+  };
 
   jobs = groups // {
     main = builtins.removeAttrs tarirpkgs (
