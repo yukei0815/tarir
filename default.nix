@@ -1,6 +1,4 @@
 {
-  # Let's nix-update use pinned pkgs from flake without including --flake in every updateScript.
-  # as the inner updateScript uses default.nix if --flake is not specified.
   pkgs ?
     let
       lock = (builtins.fromJSON (builtins.readFile ./flake.lock)).nodes.nixpkgs.locked;
@@ -11,18 +9,21 @@
     }) { },
   lib ? pkgs.lib,
 }:
-let
-  # Includes our own packages so they can depend on each other outside the overlay too.
-  callPackage = lib.callPackageWith (
-    pkgs
-    // self
-    // {
-      nix-update-script = pkgs.nix-update-script.override {
-        nix-update = pkgs.lixPackageSets.lix_2_95.nix-update;
-      };
-    }
-  );
+lib.fix (
+  self:
+  let
+    callPackage = pkgs.newScope (
+      self
+      // {
+        nix-update-script = pkgs.nix-update-script.override {
+          nix-update = pkgs.lixPackageSets.lix_2_95.nix-update;
+        };
+      }
+    );
+    auto = builtins.mapAttrs (_: path: callPackage path { }) (import ./pkgs.nix);
+  in
+  auto
+  // ({
 
-  self = builtins.mapAttrs (_: path: callPackage path { }) (import ./pkgs.nix);
-in
-self
+  })
+)
