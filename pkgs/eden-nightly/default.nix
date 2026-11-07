@@ -123,14 +123,14 @@ in
 
 edenStdenv.mkDerivation (finalAttrs: {
   pname = "eden-unstable";
-  version = "0.2.1-unstable-2026-11-03";
+  version = "0.2.1-unstable-2026-11-06";
 
   src = fetchFromGitea {
     domain = "git.eden-emu.dev";
     owner = "eden-emu";
     repo = "eden";
-    rev = "8d29148afe5cce1050927462d32772b21e9905ae";
-    hash = "sha256-vuKvnH3Hzr3sulO3H3fCbVV/KKOoc+I9flMMZFGoWlk=";
+    rev = "885b333c08760ccc406202a02a5b3d3fa5eab60b";
+    hash = "sha256-DzbB55jKY8/cFe+j8BqdSE3v56OjHT78L2nPgsqms1Y=";
   };
 
   strictDeps = true;
