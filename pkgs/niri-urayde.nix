@@ -26,13 +26,13 @@
 }:
 rustPlatform.buildRustPackage (finalAttrs: {
   pname = "niri-urayde";
-  version = "26.04-unstable-2026-10-26";
+  version = "26.04-unstable-2026-11-07";
 
   src = fetchFromGitHub {
     owner = "urayde";
     repo = "niri";
-    rev = "3af9296f088547de86c4ad19f9b293d94dea49b5";
-    hash = "sha256-VWoGkCbap7Apd2CX/7m8JEIGcyXlcKrG/DjMQIbXl8w=";
+    rev = "c7fbb4f430564555efccae09714d6a334d7d5a61";
+    hash = "sha256-qwlDvYLurLW8rePKSJFK8pE5SbNZCcX3kESKKuLimIw=";
   };
 
   outputs = [
@@ -46,7 +46,7 @@ rustPlatform.buildRustPackage (finalAttrs: {
       --replace-fail 'niri' "$out/bin/niri"
   '';
 
-  cargoHash = "sha256-te42mM+h+TzWovc5WP7KVmFzykBLAirWaKP2oZii5K0=";
+  cargoHash = "sha256-DieSa8k2eaDpoteQ3ua09K8JAyGM8bElLEW+m6n9hKs=";
 
   nativeBuildInputs = [
     installShellFiles
