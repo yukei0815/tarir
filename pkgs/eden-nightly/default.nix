@@ -10,14 +10,12 @@
   cubeb,
   enet,
   fetchFromGitea,
-  fetchFromGitHub,
   fetchurl,
   ffmpeg-headless,
   fmt,
   frozen-containers,
   gamemode,
   glslang,
-  httplib,
   kdePackages,
   libopus,
   libusb1,
@@ -41,6 +39,7 @@
   vulkan-memory-allocator,
   vulkan-utility-libraries,
   xbyak,
+  yyjson,
   zlib,
   zstd,
   callPackage,
@@ -63,7 +62,7 @@ assert (
 );
 
 let
-  # bintools for PGO
+  # bintools for LTO
   llvmStdenv = overrideCC llvmPackages.stdenv (
     llvmPackages.stdenv.cc.override { inherit (llvmPackages) bintools; }
   );
@@ -73,7 +72,7 @@ let
   pins = lib.importJSON ./pins.json;
 
   # Use fetchurl to fetch pins and then extract
-  # Using fetchzip would mean the hashes can't be reused and would need nix-update to fetch them.what
+  # Using fetchzip would mean the hashes can't be reused and would need nix-update to fetch them.
   fetchPin =
     name:
     runCommand "${name}-source" { } ''
@@ -86,12 +85,11 @@ let
       } -C $out --strip-components=1
     '';
 
-  # Pinning reshade to the version specified by eden
-  # not bothering to apply patch ".patch/reshade/${p}" - irrelevant for linux builds
-  reshade = fetchPin "reshade";
-
+  # Pin inputs to the version specified by eden
+  reshade = fetchPin "reshade"; # not bothering to apply patch ".patch/reshade/${p}" - irrelevant for linux builds
   zbic = fetchPin "zbic";
-
+  jacinth = fetchPin "jacinth"; # C++20 module
+  hydrocarbon = fetchPin "hydrocarbon";
   profdata = fetchurl {
     url = "https://github.com/Eden-CI/PGO/releases/download/${pins.profdata.version}/eden.profdata";
     sha256 = pins.profdata.hash;
@@ -105,20 +103,6 @@ let
   ];
 
   nx_tzdb = callPackage ./nx_tzdb.nix { };
-
-  # eden broken by latest httplib version bump
-  # upstream likely not interested in fixes, actively looking to remove the dependency (https://git.eden-emu.dev/eden-emu/eden/issues/4194)
-  # pin httplib for now, hopefully can entirely drop in next eden release
-  httplib' = httplib.overrideAttrs (finalAttrs: {
-    version = "0.30.2";
-
-    src = fetchFromGitHub {
-      owner = "yhirose";
-      repo = "cpp-httplib";
-      rev = "v${finalAttrs.version}";
-      hash = "sha256-psVyn14QHMXG/x9SOOiR7ZBt8dHqa2A/w92WQQDukKM=";
-    };
-  });
 in
 
 edenStdenv.mkDerivation (finalAttrs: {
@@ -145,6 +129,10 @@ edenStdenv.mkDerivation (finalAttrs: {
     qt6.qttools
     qt6.wrapQtAppsHook
     wrapGAppsHook3
+  ]
+  ++ lib.optionals useLLVM [
+    # clang-scan-deps wrapper is needed to find C++20 modules
+    llvmPackages.clang-tools
   ];
 
   buildInputs = [
@@ -156,13 +144,12 @@ edenStdenv.mkDerivation (finalAttrs: {
     fmt
     frozen-containers
     gamemode
-    httplib'
     kdePackages.quazip
     libopus
     libusb1
     # intentionally omitted: LLVM - heavy, only used for stack traces in the debugger
     lz4
-    nlohmann_json
+    nlohmann_json # for cpp-jwt
     openssl
     qt6.qtbase
     qt6.qtmultimedia
@@ -179,6 +166,7 @@ edenStdenv.mkDerivation (finalAttrs: {
     vulkan-utility-libraries
     sirit
     unordered_dense
+    yyjson
     zlib
     zstd
   ]
@@ -223,6 +211,14 @@ edenStdenv.mkDerivation (finalAttrs: {
 
     (lib.cmakeBool "zbic_FORCE_BUNDLED" true)
     (lib.cmakeFeature "zbic_CUSTOM_DIR" "${zbic}")
+
+    (lib.cmakeBool "jacinth_FORCE_BUNDLED" true)
+    (lib.cmakeFeature "jacinth_CUSTOM_DIR" "${jacinth}")
+    (lib.cmakeBool "JACINTH_USE_SYSTEM_PFR" true)
+    (lib.cmakeBool "JACINTH_USE_SYSTEM_YYJSON" true)
+
+    (lib.cmakeBool "hydrocarbon_FORCE_BUNDLED" true)
+    (lib.cmakeFeature "hydrocarbon_CUSTOM_DIR" "${hydrocarbon}")
   ]
   ++ lib.optionals enablePGO [
     (lib.cmakeFeature "CMAKE_C_FLAGS" pgoFlags)

@@ -26,4 +26,5 @@ nix-update eden-nightly.nx_tzdb \
 profdata=$(curl -sSf https://api.github.com/repos/Eden-CI/PGO/releases/latest \
   | jq '{version: .tag_name, hash: (.assets[] | select(.name == "eden.profdata") | .digest | ltrimstr("sha256:"))}')
 
-jq --argjson profdata "$profdata" '{reshade, zbic, $profdata}' "$src/cpmfile.json" > "$dir/pins.json"
+deps='{reshade, zbic, jacinth, hydrocarbon, $profdata}'
+jq --argjson profdata "$profdata" "$deps" "$src/cpmfile.json" > "$dir/pins.json"
