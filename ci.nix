@@ -6,6 +6,7 @@ let
   groups = {
     eden-nightly = { inherit (tarirpkgs) eden-nightly; };
     eden-nightly-zen4-pgo = { inherit (tarirpkgs) eden-nightly-zen4-pgo; };
+    woodpecker = { };
   };
 
   jobs = groups // {
