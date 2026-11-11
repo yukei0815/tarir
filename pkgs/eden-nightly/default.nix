@@ -107,14 +107,14 @@ in
 
 edenStdenv.mkDerivation (finalAttrs: {
   pname = "eden-unstable";
-  version = "0.2.1-unstable-2026-11-09";
+  version = "0.2.1-unstable-2026-11-10";
 
   src = fetchFromGitea {
     domain = "git.eden-emu.dev";
     owner = "eden-emu";
     repo = "eden";
-    rev = "6a767ac43a089fe988526bf7f8477ccc43277fb1";
-    hash = "sha256-YmXvuEuHL8FLozlAVWOAwDurPBSkE9xxDiGtsHp3or4=";
+    rev = "cf654052c416f9e7c80cef0a7d321476b1c52f99";
+    hash = "sha256-qxl8vDg9dxYi/PBqHRk5rmNUgSviNBcjHs6hnoB3IyU=";
   };
 
   strictDeps = true;
@@ -224,6 +224,9 @@ edenStdenv.mkDerivation (finalAttrs: {
     (lib.cmakeFeature "CMAKE_C_FLAGS" pgoFlags)
     (lib.cmakeFeature "CMAKE_CXX_FLAGS" pgoFlags)
   ];
+
+  # clang < 22 reports init-captures shadowing structured bindings under -Wshadow
+  env.NIX_CFLAGS_COMPILE = "-Wno-error=shadow";
 
   postInstall = ''
     install -Dm444 $src/dist/72-eden-input.rules $out/lib/udev/rules.d/72-eden-input.rules
