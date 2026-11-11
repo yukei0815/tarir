@@ -225,6 +225,9 @@ edenStdenv.mkDerivation (finalAttrs: {
     (lib.cmakeFeature "CMAKE_CXX_FLAGS" pgoFlags)
   ];
 
+  # clang < 22 reports init-captures shadowing structured bindings under -Wshadow
+  env.NIX_CFLAGS_COMPILE = "-Wno-error=shadow";
+
   postInstall = ''
     install -Dm444 $src/dist/72-eden-input.rules $out/lib/udev/rules.d/72-eden-input.rules
   '';
