@@ -1,10 +1,11 @@
-builtins.listToAttrs (
-  map (file: {
-    name =
-      let
-        m = builtins.match "(.*)\\.nix" file;
-      in
-      if m == null then file else builtins.head m;
-    value = ./pkgs + "/${file}";
-  }) (builtins.attrNames (builtins.readDir ./pkgs))
-)
+self: {
+  pkgs = { };
+
+  # Variant packages are not updated by CI
+  variants = {
+    eden-nightly-zen4-pgo = self.eden-nightly.override {
+      enablePGO = true;
+      buildPreset = "zen4";
+    };
+  };
+}

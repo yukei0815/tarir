@@ -20,14 +20,17 @@ lib.fix (
         };
       }
     );
-    auto = builtins.mapAttrs (_: path: callPackage path { }) (import ./pkgs.nix);
+    auto = builtins.listToAttrs (
+      map (file: {
+        name =
+          let
+            m = builtins.match "(.*)\\.nix" file;
+          in
+          if m == null then file else builtins.head m;
+        value = callPackage (./pkgs + "/${file}") { };
+      }) (builtins.attrNames (builtins.readDir ./pkgs))
+    );
+    manual = import ./pkgs.nix self;
   in
-  auto
-  // ({
-    eden-nightly-zen4-pgo = self.eden-nightly.override {
-      enablePGO = true;
-      buildPreset = "zen4";
-    };
-
-  })
+  auto // manual.pkgs // manual.variants
 )
