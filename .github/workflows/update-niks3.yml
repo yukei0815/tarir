@@ -22,7 +22,12 @@ jobs:
           new=$(gh release list -R yukei0815/niks3 --limit 1 --json tagName -q '.[0].tagName')
           echo "$new" > .github/niks3-version
           echo "title=niks3: $old -> $new" >> "$GITHUB_OUTPUT"
-          gh release view "${new%%-*}" -R Mic92/niks3 --json body -q .body > "$RUNNER_TEMP/body.md"
+          # Don't ping or backlink
+          {
+            echo '````markdown'
+            gh release view "${new%%-*}" -R Mic92/niks3 --json body -q .body
+            echo '````'
+          } > "$RUNNER_TEMP/body.md"
 
       - uses: actions/create-github-app-token@v3
         id: app-token
