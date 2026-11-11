@@ -10,6 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      statuses: write
     outputs:
       jobs: ${{ steps.plan.outputs.jobs }}
     steps:
@@ -24,7 +25,17 @@ jobs:
         run: |
           evals=$(nix shell --inputs-from . nixpkgs#lixPackageSets.lix_2_96.nix-eval-jobs -c \
             nix-eval-jobs --force-recurse --check-cache-status --expr '(import ./ci.nix).jobs')
-          echo "jobs=$(jq -sc 'map(select(.isCached | not) | .attrPath[0]) | unique - ["woodpecker"]' <<< "$evals")" >> "$GITHUB_OUTPUT"
+          uncached=$(jq -sc 'map(select(.isCached | not) | .attrPath[0]) | unique' <<< "$evals")
+          echo "jobs=$(jq -c '. - ["woodpecker"]' <<< "$uncached")" >> "$GITHUB_OUTPUT"
+          echo "woodpecker=$(jq 'any(. == "woodpecker")' <<< "$uncached")" >> "$GITHUB_OUTPUT"
+      - name: Pass Woodpecker check
+        if: steps.plan.outputs.woodpecker == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/statuses/$SHA" \
+            -f state=success -f context=ci/woodpecker/pr/heavy -f description="Nothing to build"
 
   build:
     name: Build (${{ matrix.job }})
