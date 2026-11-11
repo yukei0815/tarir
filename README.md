@@ -10,6 +10,7 @@
 | [`xivlauncher-rb`](https://github.com/rankynbass/XIVLauncher.Core) | `xivlauncher` fork with many extra linux patches. Package can add proton into the environment. `.override { extraCompatPackages = [ pkgs.proton-ge-bin ]; }` |
 | [`eden-nightly`](https://git.eden-emu.dev/eden-ci/nightly/releases) | `eden` emulator nightly releases with optional support for PGO and march built optimization |
 | `eden-nightly-zen4-pgo` | `eden` nightly built for zen4 with PGO |
+| [`linux-salkim-latest`](https://github.com/nanomatters/kernel-salkim) | Linux kernel with experimental amdgpu fixes. `boot.kernelPackages = pkgs.linuxPackagesFor tarir.packages.${system}.linux-salkim-latest;` |
 
 
 ## Usage
