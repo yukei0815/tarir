@@ -1,0 +1,16 @@
+{
+  "version": "7.3.3-2",
+  "modDirVersion": "7.3.3",
+  "rev": "8fd65e1ca996528bd5a841d717d89f0d78279533",
+  "hash": "sha256-Ts3Nq2U6MUrGEWrRVbJZCgENjsqyXYGsRUYAT1j5Cso=",
+  "patches": [
+    {
+      "url": "https://github.com/CachyOS/linux/commit/96f023bb8c13bbe6662f28da97cf5b5787e58fe1.patch",
+      "hash": "sha256-fiO8aHXJCEE0uojBFMCCt5QBEZk3QGSB8a5shfaXwcA="
+    },
+    {
+      "url": "https://raw.githubusercontent.com/nanomatters/linux-salkim/8891814d68c630a090adc1095e8195964eef59ef/linux-salkim-7.3/local-0018-amdgpu-preserve-dp-vrr-range-extension.patch",
+      "hash": "sha256-3xU2Bj00JzOTYL+HorIqw002qSwbjMXfe1pT821Q9mI="
+    }
+  ]
+}
