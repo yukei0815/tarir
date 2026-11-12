@@ -12,7 +12,7 @@
 let
   pin = lib.importJSON ./${variant}.json;
 in
-buildLinux (
+(buildLinux (
   args
   // rec {
     pname = "linux-salkim";
@@ -45,4 +45,14 @@ buildLinux (
     };
   }
   // (args.argsOverride or { })
-)
+)).overrideAttrs
+  (old: {
+    # Because of buidLinux being strange
+    # unsafeGetAttrPos will return the incorrect file location for src and version
+    # So nix-update can't function properly
+    # Workaround: override version and src so unsafeGetAttrPos points to this file
+    inherit (old) src;
+    passthru = old.passthru // {
+      inherit (old) version;
+    };
+  })
