@@ -10,7 +10,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      statuses: write
     steps:
       - uses: actions/checkout@v7
 
@@ -37,7 +36,6 @@ jobs:
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
 
       - uses: peter-evans/create-pull-request@v8
-        id: pr
         with:
           token: ${{ steps.app-token.outputs.token }}
           branch: update/niks3
@@ -47,15 +45,3 @@ jobs:
           title: ${{ steps.check.outputs.title }}
           body-path: ${{ runner.temp }}/body.md
           delete-branch: true
-
-        # woodpecker ignores update/niks3 branch
-        # auto pass the check
-        # not needed but makes check green!
-      - name: Pass Woodpecker check
-        if: steps.pr.outputs.pull-request-head-sha
-        env:
-          GH_TOKEN: ${{ github.token }}
-          SHA: ${{ steps.pr.outputs.pull-request-head-sha }}
-        run: |
-          gh api "repos/$GITHUB_REPOSITORY/statuses/$SHA" \
-            -f state=success -f context=ci/woodpecker/pr/heavy -f description="Nothing to build"

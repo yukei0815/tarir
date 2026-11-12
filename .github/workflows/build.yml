@@ -10,9 +10,9 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      statuses: write
     outputs:
       jobs: ${{ steps.plan.outputs.jobs }}
+      exalted: ${{ steps.plan.outputs.exalted }}
     steps:
       - uses: actions/checkout@v7
       - uses: yukei0815/lix-quick-install-action@v6
@@ -26,16 +26,8 @@ jobs:
           evals=$(nix shell --inputs-from . nixpkgs#lixPackageSets.lix_2_96.nix-eval-jobs -c \
             nix-eval-jobs --force-recurse --check-cache-status --expr '(import ./ci.nix).jobs')
           uncached=$(jq -sc 'map(select(.isCached | not) | .attrPath[0]) | unique' <<< "$evals")
-          echo "jobs=$(jq -c '. - ["woodpecker"]' <<< "$uncached")" >> "$GITHUB_OUTPUT"
-          echo "woodpecker=$(jq 'any(. == "woodpecker")' <<< "$uncached")" >> "$GITHUB_OUTPUT"
-      - name: Pass Woodpecker check
-        if: steps.plan.outputs.woodpecker == 'false'
-        env:
-          GH_TOKEN: ${{ github.token }}
-          SHA: ${{ github.event.pull_request.head.sha }}
-        run: |
-          gh api "repos/$GITHUB_REPOSITORY/statuses/$SHA" \
-            -f state=success -f context=ci/woodpecker/pr/heavy -f description="Nothing to build"
+          echo "jobs=$(jq -c '. - ["exalted"]' <<< "$uncached")" >> "$GITHUB_OUTPUT"
+          echo "exalted=$(jq 'any(. == "exalted")' <<< "$uncached")" >> "$GITHUB_OUTPUT"
 
   build:
     name: Build (${{ matrix.job }})
@@ -74,10 +66,23 @@ jobs:
           nix shell --inputs-from . nixpkgs#lixPackageSets.lix_2_96.nix-fast-build -c \
             nix-fast-build --file ci.nix -A "jobs.$JOB" --skip-cached
 
+  # Lix, nix-fast-build and the niks3 upload hook come from the runner VM
+  build-exalted:
+    name: Build (exalted)
+    needs: plan
+    if: needs.plan.outputs.exalted == 'true'
+    runs-on: self-hosted
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build packages not in cache
+        run: nix-fast-build --file ci.nix -A jobs.exalted --skip-cached
+
   # for branch protection
   result:
     name: Build result
-    needs: [plan, build]
+    needs: [plan, build, build-exalted]
     if: always()
     runs-on: ubuntu-latest
     steps:

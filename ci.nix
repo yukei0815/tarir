@@ -5,7 +5,7 @@ let
   groups = {
     eden-nightly = { inherit (tarirpkgs) eden-nightly; };
     eden-nightly-zen4-pgo = { inherit (tarirpkgs) eden-nightly-zen4-pgo; };
-    woodpecker = { inherit (tarirpkgs) linux-salkim-latest; };
+    exalted = { inherit (tarirpkgs) linux-salkim-latest; };
   };
 
   jobs = groups // {
