@@ -12,8 +12,8 @@ rustPlatform.buildRustPackage (finalAttrs: {
   src = fetchFromGitHub {
     owner = "manic-systems";
     repo = "tack";
-    rev = "1d1bbe2a27c416458be61a941a6228afea534e6e";
-    hash = "sha256-KXFPNN+Js56ATlxNR40ttj1Azp866HSbQMquq5zt5Dc=";
+    rev = "c107b0fc252b0b33b01e6b7d6111aaaedc49613e";
+    hash = "sha256-bdNCaHUF3c8hgsYw6FCI+lGcZanZIDxt2Sefu5AsERY=";
   };
 
   __structuredAttrs = true;
