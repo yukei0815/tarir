@@ -8,17 +8,17 @@
 }:
 rustPlatform.buildRustPackage (finalAttrs: {
   pname = "tack";
-  version = "1.0.1-unstable-2026-11-09";
+  version = "1.0.1-unstable-2026-11-12";
   src = fetchFromGitHub {
     owner = "manic-systems";
     repo = "tack";
-    rev = "f59bc3e6679df14d402e40bf895cc2533bae4ca2";
-    hash = "sha256-ZK5sfTsvSo9VYEi8mAVtfu5FUFvMYoGMn6+CYzS1pPU=";
+    rev = "1d1bbe2a27c416458be61a941a6228afea534e6e";
+    hash = "sha256-KXFPNN+Js56ATlxNR40ttj1Azp866HSbQMquq5zt5Dc=";
   };
 
   __structuredAttrs = true;
 
-  cargoHash = "sha256-edYigZ2aQYbxmHuuIiQo9lMTsu3YFgaRySgVbbSVY0I=";
+  cargoHash = "sha256-U8PVSnkQSmv+CZCJbwg3PltrJFXg1QKPX/7ABcAbBsA=";
 
   nativeBuildInputs = [ pkg-config ];
   buildInputs = [ zstd ];
