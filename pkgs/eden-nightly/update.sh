@@ -1,5 +1,5 @@
 #!/usr/bin/env nix-shell
-#!nix-shell -i bash -p nix-update common-updater-scripts jq curl
+#!nix-shell -i bash -p lixPackageSets.lix_2_96.nix-update "common-updater-scripts.override { nix = lixPackageSets.lix_2_96.lix; }" jq curl
 
 set -eu -o pipefail
 
