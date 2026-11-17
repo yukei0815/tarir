@@ -8,12 +8,12 @@
 }:
 rustPlatform.buildRustPackage (finalAttrs: {
   pname = "tack";
-  version = "1.0.1-unstable-2026-11-16";
+  version = "1.0.1-unstable-2026-11-17";
   src = fetchFromGitHub {
     owner = "manic-systems";
     repo = "tack";
-    rev = "ec2c5be358b8c2cfe0e7674b60e8feccb33d7307";
-    hash = "sha256-Tz93VI/CWOYIrQtdyCxo+TEWnrZPtZ0qd4DsKVdFaBs=";
+    rev = "bad78453288bfb5d890af856fa2429979e2b944c";
+    hash = "sha256-Jn+PT5iYnKcttgR5Rc6oWLNxhFGzyBY3/P3sgvqcQDU=";
   };
 
   __structuredAttrs = true;
