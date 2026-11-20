@@ -107,14 +107,14 @@ in
 
 edenStdenv.mkDerivation (finalAttrs: {
   pname = "eden-unstable";
-  version = "0.2.1-unstable-2026-11-11";
+  version = "0.2.1-unstable-2026-11-19";
 
   src = fetchFromGitea {
     domain = "git.eden-emu.dev";
     owner = "eden-emu";
     repo = "eden";
-    rev = "98485e5f909b35a2694c79c273cf38a23fac23f8";
-    hash = "sha256-zWzKFmg8cBlbN/L7aLg6DP6FL/SJnjmqtJ4bKBiY+pg=";
+    rev = "8a482830170bfe5ae041817cc12c233a9f0c9d2e";
+    hash = "sha256-CoGm6zKAzz66ZwqvklL6PdbbNkYzwztmq76g4Fb/VpM=";
   };
 
   strictDeps = true;
