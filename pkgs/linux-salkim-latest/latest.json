@@ -1,8 +1,8 @@
 {
-  "version": "7.3.5-2",
-  "modDirVersion": "7.3.5",
-  "rev": "635973913d1ecdc029e1925e4b61a74bb15aca84",
-  "hash": "sha256-wMVwQZgBbVAQ5Db6olQiZ6LyVTnMqO79dPBzVHzHiLU=",
+  "version": "7.3.6-1",
+  "modDirVersion": "7.3.6",
+  "rev": "1344cd6dc2648ea3482c6efadab8e6a09229e56c",
+  "hash": "sha256-AnrlNw28RcbYOvEMHuBwTwUYqSfdk2VmSnDt0RYSxD0=",
   "patches": [
     {
       "url": "https://github.com/CachyOS/linux/commit/96f023bb8c13bbe6662f28da97cf5b5787e58fe1.patch",
